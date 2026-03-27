@@ -232,19 +232,17 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 /* === RISK CHART PAGE === */
 .chart-page{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.25,1,0.5,1);display:flex;flex-direction:column;padding-top:var(--safe-top)}
 .chart-page.open{transform:translateY(0)}
-.chart-topbar{display:flex;align-items:center;padding:14px 20px 8px;gap:12px;position:relative}
-.chart-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:400;font-family:inherit;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:1px;z-index:1}
-.chart-back-chev{font-size:22px;font-weight:300;line-height:1;margin-right:1px}
-.chart-title{font-size:17px;font-weight:700;color:var(--text);position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
-.chart-live{text-align:center;padding:4px 20px 6px}
+.chart-topbar{display:flex;align-items:center;padding:14px 20px 6px;gap:12px}
+.chart-back{background:none;border:none;color:var(--accent);font-size:26px;font-weight:300;font-family:inherit;cursor:pointer;padding:2px 4px;line-height:1;display:flex;align-items:center}
+.chart-live{padding:4px 20px 8px}
+.clr-label{font-size:12px;font-weight:500;color:var(--text3);letter-spacing:0.3px;display:block;margin-bottom:2px}
 .chart-live-num{display:inline-flex;align-items:baseline;gap:1px;font-variant-numeric:tabular-nums}
-.clr-int{font-size:42px;font-weight:700;line-height:1}
-.clr-dot{font-size:32px;font-weight:700;line-height:1}
-.clr-dec{font-size:22px;font-weight:600;line-height:1;opacity:.75}
-.clr-pct{font-size:20px;font-weight:600;margin-left:2px;opacity:.45;line-height:1}
-.clr-phase{font-size:13px;font-weight:600;margin-top:5px}
-.clr-motive{font-size:12px;color:var(--text2);margin-top:4px;text-align:center;padding:0 24px;line-height:1.4}
-.chart-range{display:flex;gap:6px;padding:0 20px 8px;justify-content:center}
+.clr-int{font-size:48px;font-weight:700;line-height:1}
+.clr-dot{font-size:36px;font-weight:700;line-height:1}
+.clr-dec{font-size:26px;font-weight:600;line-height:1;opacity:.8}
+.clr-pct{font-size:22px;font-weight:600;margin-left:3px;opacity:.5;line-height:1;color:var(--text)}
+.clr-motive{font-size:13px;color:var(--text2);margin-top:5px;line-height:1.4}
+.chart-range{display:flex;gap:6px;padding:10px 20px calc(var(--safe-bottom) + 10px);justify-content:center;border-top:1px solid rgba(255,255,255,0.06)}
 .crb{background:var(--surface);border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
 .crb.active{background:var(--accent);color:#fff}
 .crb:active{transform:scale(0.95)}
@@ -511,7 +509,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.9</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.91</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -739,22 +737,14 @@ function render(){
     const chStr=chRisk.toFixed(1);const chDot=chStr.indexOf('.');
     html+=`<div class="chart-page ${activeModal==='riskChart'?'open':''}" id="chart-page">
       <div class="chart-topbar">
-        <button class="chart-back" onclick="closeRiskChart()"><span class="chart-back-chev">‹</span>Назад</button>
-        <div class="chart-title">Шанс рецидива</div>
+        <button class="chart-back" onclick="closeRiskChart()">←</button>
       </div>
       <div class="chart-live">
+        <span class="clr-label">Шанс рецидива</span>
         <div class="chart-live-num">
-          <span class="clr-int" style="color:${chPhase.color}">${chStr.substring(0,chDot)}</span><span class="clr-dot" style="color:${chPhase.color}">.</span><span class="clr-dec">${chStr.substring(chDot+1)}</span><span class="clr-pct">%</span>
+          <span class="clr-int" style="color:${chPhase.color}">${chStr.substring(0,chDot)}</span><span class="clr-dot" style="color:${chPhase.color}">.</span><span class="clr-dec">${chStr.substring(chDot+1)}</span><span class="clr-pct"> %</span>
         </div>
-        <div class="clr-phase" style="color:${chPhase.color}">${chPhase.label}</div>
         <div class="clr-motive">${ch?getChartMotive(chRisk):''}</div>
-      </div>
-      <div class="chart-range">
-        <button class="crb ${chartRange===30?'active':''}" data-days="30" onclick="setChartRange(30)">1 мес</button>
-        <button class="crb ${chartRange===90?'active':''}" data-days="90" onclick="setChartRange(90)">3 мес</button>
-        <button class="crb ${chartRange===180?'active':''}" data-days="180" onclick="setChartRange(180)">6 мес</button>
-        <button class="crb ${chartRange===365?'active':''}" data-days="365" onclick="setChartRange(365)">1 год</button>
-        <button class="crb ${chartRange===1825?'active':''}" data-days="1825" onclick="setChartRange(1825)">5 лет</button>
       </div>
       <div class="chart-canvas-wrap"><canvas id="risk-chart-canvas"></canvas></div>
       <div class="chart-legend">
@@ -764,6 +754,13 @@ function render(){
         <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#30d158"></div>Минимальный риск</div>
       </div>
       <div class="chart-info">Основано на научных данных</div>
+      <div class="chart-range">
+        <button class="crb ${chartRange===30?'active':''}" data-days="30" onclick="setChartRange(30)">1 мес</button>
+        <button class="crb ${chartRange===90?'active':''}" data-days="90" onclick="setChartRange(90)">3 мес</button>
+        <button class="crb ${chartRange===180?'active':''}" data-days="180" onclick="setChartRange(180)">6 мес</button>
+        <button class="crb ${chartRange===365?'active':''}" data-days="365" onclick="setChartRange(365)">1 год</button>
+        <button class="crb ${chartRange===1825?'active':''}" data-days="1825" onclick="setChartRange(1825)">5 лет</button>
+      </div>
     </div>`;
   }
 
@@ -1164,8 +1161,8 @@ function drawRiskChart(touchDay){
 
   // Phase zones
   const zones=alc
-    ?[[60,100,'rgba(255,69,58,0.13)'],[35,60,'rgba(255,159,10,0.10)'],[15,35,'rgba(255,214,10,0.08)'],[0,15,'rgba(48,209,88,0.09)']]
-    :[[50,100,'rgba(255,69,58,0.13)'],[20,50,'rgba(255,159,10,0.10)'],[8,20,'rgba(255,214,10,0.08)'],[0,8,'rgba(48,209,88,0.09)']];
+    ?[[60,100,'rgba(255,69,58,0.28)'],[35,60,'rgba(255,159,10,0.22)'],[15,35,'rgba(255,214,10,0.16)'],[0,15,'rgba(48,209,88,0.18)']]
+    :[[50,100,'rgba(255,69,58,0.28)'],[20,50,'rgba(255,159,10,0.22)'],[8,20,'rgba(255,214,10,0.16)'],[0,8,'rgba(48,209,88,0.18)']];
   zones.forEach(([lo,hi,col])=>{ctx.fillStyle=col;ctx.fillRect(pad.left,yPx(hi),cw,yPx(lo)-yPx(hi))});
 
   // Grid
