@@ -257,15 +257,41 @@ function getTopOldToken(oldTokens){
   return best;
 }
 
-// Risk calculations
+// Risk calculations — Smoking (B=0.50, стремительное снижение)
 function riskFromSeconds(s){return 99/Math.sqrt(1+s/86400)+1}
 function speedFromSeconds(s){return -99/(2*86400*Math.pow(1+s/86400,1.5))}
 function getRiskDecimals(s){
   const spd=Math.abs(speedFromSeconds(s));
   const changePerTick=spd*0.1;
+  if(changePerTick<=0)return 8;
   return Math.max(4,Math.ceil(-Math.log10(changePerTick))+1);
 }
-function getRiskPhase(risk){
+
+// Risk calculations — Alcohol (B=0.30, пологий старт, длинный хвост)
+// Источники: NIAAA 2023, Recovery Village, PMC Veterans study, J. Studies on Alcohol
+function alcRisk(s){return 88/Math.pow(1+s/86400,0.30)+4}
+function alcSpeed(s){return -88*0.30/(86400*Math.pow(1+s/86400,1.30))}
+function getAlcDecimals(s){
+  const spd=Math.abs(alcSpeed(s));
+  const changePerTick=spd*0.1;
+  if(changePerTick<=0)return 8;
+  return Math.max(4,Math.ceil(-Math.log10(changePerTick))+1);
+}
+
+function isAlcohol(name){return name&&/алкоголь/i.test(name)}
+function getRiskFns(name){
+  return isAlcohol(name)
+    ?{riskFn:alcRisk,decFn:getAlcDecimals}
+    :{riskFn:riskFromSeconds,decFn:getRiskDecimals};
+}
+
+function getRiskPhase(risk,alc){
+  if(alc){
+    if(risk>60)return{label:'Критическая зона',color:'#ff453a',bg:'rgba(255,69,58,0.12)'};
+    if(risk>35)return{label:'Опасный период',color:'#ff9f0a',bg:'rgba(255,159,10,0.12)'};
+    if(risk>15)return{label:'Становится легче',color:'#ffd60a',bg:'rgba(255,214,10,0.12)'};
+    return{label:'Безопасная зона',color:'#30d158',bg:'rgba(48,209,88,0.12)'};
+  }
   if(risk>50)return{label:'Критическая зона',color:'#ff453a',bg:'rgba(255,69,58,0.12)'};
   if(risk>20)return{label:'Опасный период',color:'#ff9f0a',bg:'rgba(255,159,10,0.12)'};
   if(risk>8)return{label:'Становится легче',color:'#ffd60a',bg:'rgba(255,214,10,0.12)'};
@@ -333,14 +359,16 @@ function render(){
 
     // Risk counter
     const riskS=e.totalSeconds;
-    const risk=riskFromSeconds(riskS);
-    const rDec=getRiskDecimals(riskS);
-    const phase=getRiskPhase(risk);
+    const _alc=isAlcohol(h.name);
+    const {riskFn,decFn}=getRiskFns(h.name);
+    const risk=riskFn(riskS);
+    const rDec=decFn(riskS);
+    const phase=getRiskPhase(risk,_alc);
     const riskStr=risk.toFixed(rDec);
     const dotIdx=riskStr.indexOf('.');
     const rInt=riskStr.substring(0,dotIdx);
     const rFrac=riskStr.substring(dotIdx+1);
-    html+=`<div class="risk-block" data-quit="${h.quitDate}">
+    html+=`<div class="risk-block" data-quit="${h.quitDate}" data-name="${h.name}">
       <div class="risk-center">
         <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500">Шанс рецидива</div>
         <div class="risk-number" id="risk-num">
@@ -636,12 +664,15 @@ setInterval(()=>{
   const block=document.querySelector('.risk-block');
   if(!block)return;
   const quit=block.dataset.quit;if(!quit)return;
+  const name=block.dataset.name||'';
   const s=(Date.now()-new Date(quit).getTime())/1000;
-  const risk=riskFromSeconds(s);
-  const dec=getRiskDecimals(s);
+  const alc=isAlcohol(name);
+  const {riskFn,decFn}=getRiskFns(name);
+  const risk=riskFn(s);
+  const dec=decFn(s);
   const str=risk.toFixed(dec);
   const di=str.indexOf('.');
-  const phase=getRiskPhase(risk);
+  const phase=getRiskPhase(risk,alc);
   const el=document.getElementById('risk-num');
   if(el){
     el.querySelector('.risk-int').textContent=str.substring(0,di);
