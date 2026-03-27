@@ -74,10 +74,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .progress-card{margin:0 20px 16px;padding:16px;background:var(--surface);border-radius:16px;cursor:pointer;transition:transform 0.15s,opacity 0.15s;animation:fadeUp 0.35s ease-out both;animation-delay:0.25s}
 .progress-card:active{transform:scale(0.98);opacity:0.85}
 .pc-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.pc-rank{font-size:28px;font-weight:800;font-family:Georgia,serif;width:44px;text-align:center;line-height:1;flex-shrink:0}
-.pc-info{flex:1;min-width:0}
-.pc-current{font-size:14px;font-weight:600;color:var(--text)}
-.pc-next-label{font-size:12px;color:var(--text3);margin-top:2px}
+.pc-rank{font-size:26px;font-weight:800;font-family:Georgia,serif;min-width:52px;max-width:52px;text-align:center;line-height:1;flex-shrink:0;white-space:nowrap}
+.pc-info{flex:1;min-width:0;overflow:hidden}
+.pc-current{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-next-label{font-size:12px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc-arrow{font-size:20px;color:var(--text3);opacity:0.6}
 .pc-bar-track{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-bottom:8px}
 .pc-bar-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
@@ -487,19 +487,19 @@ function render(){
 
     // Timer bars
     const barItems=[
-      {v:e.years,max:10,label:'лет',c:BAR_COLORS[0],key:'years'},
-      {v:e.months,max:12,label:'месяцев',c:BAR_COLORS[1],key:'months'},
-      {v:e.days,max:30,label:'дней',c:BAR_COLORS[2],key:'days'},
-      {v:e.hours,max:24,label:'часов',c:BAR_COLORS[3],key:'hours'},
-      {v:e.minutes,max:60,label:'минут',c:BAR_COLORS[4],key:'minutes'},
-      {v:e.seconds,max:60,label:'секунд',c:BAR_COLORS[5],key:'seconds'},
+      {v:e.years,  max:10, label:'лет',    c:BAR_COLORS[0], key:'years',   op:1.00},
+      {v:e.months, max:12, label:'месяцев',c:BAR_COLORS[1], key:'months',  op:1.00},
+      {v:e.days,   max:30, label:'дней',   c:BAR_COLORS[2], key:'days',    op:0.90},
+      {v:e.hours,  max:24, label:'часов',  c:BAR_COLORS[3], key:'hours',   op:0.60},
+      {v:e.minutes,max:60, label:'минут',  c:BAR_COLORS[4], key:'minutes', op:0.45},
+      {v:e.seconds,max:60, label:'секунд', c:BAR_COLORS[5], key:'seconds', op:0.32},
     ];
 
     html+=`<div class="timer-bars" data-quit="${h.quitDate}">`;
     barItems.forEach(b=>{
       const show=b.v>0;
       const pct=show?Math.min(100,(b.v/b.max)*100):0;
-      html+=`<div class="tbar" data-bar-key="${b.key}" style="${show?'':'display:none'}"><div class="tbar-fill" style="width:${pct}%;background:${color}"><div class="tbar-text"><span class="tbar-num">${b.v}</span><span class="tbar-label">${b.label}</span></div></div></div>`;
+      html+=`<div class="tbar" data-bar-key="${b.key}" style="${show?'':'display:none'};opacity:${b.op}"><div class="tbar-fill" style="width:${pct}%;background:linear-gradient(90deg,${b.c[0]},${b.c[1]})"><div class="tbar-text"><span class="tbar-num">${b.v}</span><span class="tbar-label">${b.label}</span></div></div></div>`;
     });
     html+=`</div>`;
 
