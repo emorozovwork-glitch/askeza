@@ -151,7 +151,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .tokens-page{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.25,1,0.5,1);overflow-y:auto;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom)+20px)}
 .tokens-page.open{transform:translateY(0)}
 .tp-topbar{display:flex;align-items:center;padding:14px 20px 8px;gap:12px;position:sticky;top:0;background:var(--bg);z-index:1}
-.tp-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
+.tp-back{background:none;border:none;color:var(--accent);font-size:26px;font-weight:300;font-family:inherit;cursor:pointer;padding:2px 4px;line-height:1;display:flex;align-items:center}
 .tp-title{font-size:17px;font-weight:700;color:var(--text)}
 .tp-habit{font-size:13px;color:var(--text3);text-align:center;padding:0 20px 16px}
 /* Tier colors */
@@ -523,7 +523,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.941</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.942</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -802,7 +802,7 @@ function render(){
     const habitColor=th?th.color:'#2aabee';
     html+=`<div class="tokens-page ${activeModal==='tokensPage'?'open':''}" id="tokens-page">
       <div class="tp-topbar">
-        <button class="tp-back" onclick="closeTokensPage()">‹ Назад</button>
+        <button class="tp-back" onclick="closeTokensPage()">←</button>
         <div class="tp-title">Жетоны</div>
       </div>
       ${th?`<div class="tp-habit">${th.name} · ${tEl.days>0?tEl.days+' дн ':''} ${tEl.hours} ч без привычки</div>`:''}
