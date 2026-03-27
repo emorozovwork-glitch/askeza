@@ -266,7 +266,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .chart-info{padding:4px 20px 12px;font-size:11px;color:var(--text3);text-align:center;line-height:1.5}
 
 /* === CELEBRATION === */
-.celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.3s}
+.celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:600;opacity:0;pointer-events:none;transition:opacity 0.3s}
 .celebration.active{opacity:1;pointer-events:all}
 .celebration .cel-emoji{font-size:72px;animation:cardFlip 0.55s cubic-bezier(0.25,1,0.5,1) both;perspective:600px}
 .celebration .cel-title{font-size:24px;font-weight:700;margin:16px 0 8px;text-align:center;padding:0 20px}
@@ -531,7 +531,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.953</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.0</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -875,6 +875,7 @@ function toggleSideMenu(){
 }
 function closeSideMenu(){
   sideMenuOpen=false;
+  _swipeOpen=null;
   const dd=document.getElementById('habit-dropdown');
   const bd=document.querySelector('.hd-backdrop');
   if(dd)dd.classList.remove('open');
@@ -919,8 +920,8 @@ function initHabitSwipes(){
 function closeSwipeRow(row){if(!row)return;row.style.transition='transform 0.25s cubic-bezier(0.25,1,0.5,1)';row.style.transform='';}
 function swipeReset(id){closeSwipeRow(_swipeOpen);_swipeOpen=null;closeSideMenu();resetStreak(id);}
 function swipeDel(id){closeSwipeRow(_swipeOpen);_swipeOpen=null;closeSideMenu();deleteHabit(id);}
-function openAllTokens(){activeModal='tokensPage';document.getElementById('tokens-page').classList.add('open')}
 function openTokensPage(){activeModal='tokensPage';document.getElementById('tokens-page').classList.add('open')}
+function openAllTokens(){openTokensPage()}
 function closeTokensPage(){activeModal=null;document.getElementById('tokens-page').classList.remove('open')}
 function openHabitActions(id){activeModal='habitActions';document.querySelector('.sheet-overlay').classList.add('active')}
 function closeHabitActions(){activeModal=null;document.querySelector('.sheet-overlay').classList.remove('active')}
