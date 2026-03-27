@@ -161,6 +161,20 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .all-token-badge.active-badge{background:rgba(255,214,10,0.1);color:var(--gold)}
 .all-token-badge.old-badge{background:var(--surface);color:var(--text3)}
 
+/* === RISK CHART PAGE === */
+.chart-page{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.25,1,0.5,1);display:flex;flex-direction:column;padding-top:var(--safe-top)}
+.chart-page.open{transform:translateY(0)}
+.chart-topbar{display:flex;align-items:center;padding:14px 20px 10px;gap:12px}
+.chart-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:4px}
+.chart-title{font-size:17px;font-weight:700;color:var(--text)}
+.chart-subtitle{font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px;padding:0 20px}
+.chart-canvas-wrap{flex:1;padding:0 16px 0;min-height:0}
+.chart-canvas-wrap canvas{width:100%!important;display:block}
+.chart-legend{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px 8px;justify-content:center}
+.chart-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.chart-leg-dot{width:8px;height:8px;border-radius:50%}
+.chart-info{padding:8px 20px 16px;font-size:12px;color:var(--text3);text-align:center;line-height:1.5}
+
 /* === CELEBRATION === */
 .celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.3s}
 .celebration.active{opacity:1;pointer-events:all}
@@ -368,13 +382,14 @@ function render(){
     const dotIdx=riskStr.indexOf('.');
     const rInt=riskStr.substring(0,dotIdx);
     const rFrac=riskStr.substring(dotIdx+1);
-    html+=`<div class="risk-block" data-quit="${h.quitDate}" data-name="${h.name}">
+    html+=`<div class="risk-block" data-quit="${h.quitDate}" data-name="${h.name}" onclick="openRiskChart()" style="cursor:pointer">
       <div class="risk-center">
         <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500">Шанс рецидива</div>
         <div class="risk-number" id="risk-num">
           <span class="risk-int">${rInt}</span><span class="risk-dot">.</span><span class="risk-dec">${rFrac}</span><span class="risk-pct">%</span>
         </div>
         <div><span class="risk-phase" style="color:${phase.color};background:${phase.bg}">${phase.label}</span></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:8px;letter-spacing:0.3px">График динамики ›</div>
       </div>
     </div>`;
 
@@ -514,6 +529,23 @@ function render(){
       <button class="btn-secondary" onclick="closeModal()">Закрыть</button>
     </div></div>`;
   }
+
+  // Risk chart page
+  html+=`<div class="chart-page ${activeModal==='riskChart'?'open':''}" id="chart-page">
+    <div class="chart-topbar">
+      <button class="chart-back" onclick="closeRiskChart()">‹ Назад</button>
+      <div class="chart-title">Шанс рецидива</div>
+    </div>
+    <div class="chart-subtitle" id="chart-subtitle"></div>
+    <div class="chart-canvas-wrap"><canvas id="risk-chart-canvas"></canvas></div>
+    <div class="chart-legend">
+      <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff453a"></div>Критическая зона</div>
+      <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff9f0a"></div>Опасный период</div>
+      <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ffd60a"></div>Становится легче</div>
+      <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#30d158"></div>Безопасная зона</div>
+    </div>
+    <div class="chart-info">Чем дольше ты держишься — тем ниже риск срыва.<br>График рассчитан по научным данным.</div>
+  </div>`;
 
   // Celebration
   if(celebrationData){
@@ -658,6 +690,140 @@ data.habits.forEach(h=>{
 });
 if(!activeHabitId&&data.habits.length>0)activeHabitId=data.habits[0].id;
 render();requestAnimationFrame(updateTimers);
+
+// === RISK CHART ===
+function openRiskChart(){activeModal='riskChart';render();setTimeout(drawRiskChart,50)}
+function closeRiskChart(){activeModal=null;render()}
+
+function drawRiskChart(){
+  const canvas=document.getElementById('risk-chart-canvas');
+  if(!canvas)return;
+  const h=data.habits.find(x=>x.id===activeHabitId);
+  if(!h)return;
+
+  const alc=isAlcohol(h.name);
+  const {riskFn}=getRiskFns(h.name);
+  const elapsed=getElapsed(h.quitDate);
+  const currentDays=elapsed.totalSeconds/86400;
+
+  // Canvas size
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth;
+  const H=Math.min(wrap.clientHeight||260, 260);
+  canvas.width=W*2; canvas.height=H*2;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(2,2);
+
+  const pad={top:16,right:16,bottom:44,left:42};
+  const cw=W-pad.left-pad.right;
+  const ch=H-pad.top-pad.bottom;
+
+  // X range: always 0..365 days
+  const xMax=365;
+  const yMax=100;
+
+  function xPx(days){return pad.left+days/xMax*cw}
+  function yPx(risk){return pad.top+ch-(risk/yMax)*ch}
+
+  // Phase zone backgrounds
+  const phases=alc
+    ?[[60,100,'rgba(255,69,58,0.13)'],[35,60,'rgba(255,159,10,0.10)'],[15,35,'rgba(255,214,10,0.08)'],[0,15,'rgba(48,209,88,0.09)']]
+    :[[50,100,'rgba(255,69,58,0.13)'],[20,50,'rgba(255,159,10,0.10)'],[8,20,'rgba(255,214,10,0.08)'],[0,8,'rgba(48,209,88,0.09)']];
+  phases.forEach(([lo,hi,col])=>{
+    ctx.fillStyle=col;
+    ctx.fillRect(pad.left, yPx(hi), cw, yPx(lo)-yPx(hi));
+  });
+
+  // Grid Y lines
+  ctx.strokeStyle='rgba(255,255,255,0.06)';
+  ctx.lineWidth=0.8;
+  [0,25,50,75,100].forEach(y=>{
+    ctx.beginPath();ctx.moveTo(pad.left,yPx(y));ctx.lineTo(pad.left+cw,yPx(y));ctx.stroke();
+  });
+
+  // Y axis labels
+  ctx.fillStyle='rgba(142,142,147,0.8)';
+  ctx.font='500 9px Inter,-apple-system,sans-serif';
+  ctx.textAlign='right';
+  [0,25,50,75,100].forEach(y=>{
+    ctx.fillText(y+'%', pad.left-5, yPx(y)+3);
+  });
+
+  // X axis labels
+  const xTicks=[{d:1,l:'1д'},{d:7,l:'1н'},{d:30,l:'1м'},{d:90,l:'3м'},{d:180,l:'6м'},{d:365,l:'1г'}];
+  ctx.fillStyle='rgba(142,142,147,0.8)';
+  ctx.textAlign='center';
+  xTicks.forEach(t=>{
+    const x=xPx(t.d);
+    ctx.fillText(t.l, x, H-pad.bottom+14);
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(x,pad.top);ctx.lineTo(x,pad.top+ch);ctx.stroke();
+  });
+
+  // Risk curve — gradient stroke
+  const grad=ctx.createLinearGradient(pad.left,0,pad.left+cw,0);
+  grad.addColorStop(0,'#ff453a');
+  grad.addColorStop(0.12,'#ff9f0a');
+  grad.addColorStop(0.3,'#ffd60a');
+  grad.addColorStop(1,'#30d158');
+  ctx.strokeStyle=grad;
+  ctx.lineWidth=2.5;
+  ctx.lineJoin='round';
+  ctx.beginPath();
+  const steps=300;
+  for(let i=0;i<=steps;i++){
+    const d=i/steps*xMax;
+    const r=riskFn(d*86400);
+    const x=xPx(d), y=yPx(r);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Current position
+  if(currentDays<=xMax){
+    const cx2=xPx(currentDays);
+    const cy2=yPx(riskFn(elapsed.totalSeconds));
+    const phase=getRiskPhase(riskFn(elapsed.totalSeconds),alc);
+
+    // Vertical dashed line
+    ctx.strokeStyle='rgba(255,255,255,0.25)';
+    ctx.lineWidth=1;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(cx2,pad.top);ctx.lineTo(cx2,pad.top+ch);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glow
+    const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,14);
+    grd.addColorStop(0,'rgba(255,255,255,0.25)');
+    grd.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=grd;
+    ctx.beginPath();ctx.arc(cx2,cy2,14,0,Math.PI*2);ctx.fill();
+
+    // Dot
+    ctx.fillStyle=phase.color;
+    ctx.beginPath();ctx.arc(cx2,cy2,5,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    // Label "Ты здесь"
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.font='bold 10px Inter,-apple-system,sans-serif';
+    ctx.textAlign=currentDays>300?'right':'left';
+    ctx.fillText('Ты здесь', cx2+(currentDays>300?-8:8), cy2-9);
+  }
+
+  // Subtitle
+  const sub=document.getElementById('chart-subtitle');
+  if(sub){
+    const r=riskFn(elapsed.totalSeconds);
+    const phase=getRiskPhase(r,alc);
+    sub.textContent=`${h.name} · сейчас ${r.toFixed(1)}% · ${phase.label}`;
+    sub.style.color=phase.color;
+  }
+}
 
 // Risk counter — 10fps update
 setInterval(()=>{
