@@ -102,13 +102,51 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .progress-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(0.4,0,0.2,1);background:var(--accent)}
 
 /* === TOKENS === */
-.tokens-section{padding:0 20px;animation:fadeUp 0.35s ease-out both;animation-delay:0.25s}
+.tokens-section{padding:0 20px;animation:fadeUp 0.35s ease-out both;animation-delay:0.25s;cursor:pointer}
 .tokens-title{font-size:13px;color:var(--text3);font-weight:500;margin-bottom:8px}
-.tokens-row{display:flex;gap:6px;flex-wrap:wrap;cursor:pointer}
+.tokens-row{display:flex;gap:6px;flex-wrap:wrap}
 .token{font-size:12px;padding:6px 12px;border-radius:8px;font-weight:600;display:flex;align-items:center;gap:4px;transition:transform 0.15s}
 .token:active{transform:scale(0.95)}
 .token.earned{background:rgba(255,214,10,0.1);color:var(--gold);border:1px solid rgba(255,214,10,0.2)}
 .token.locked{background:var(--surface);color:var(--text3);border:none;opacity:0.6;cursor:default}
+.token-next-hint{font-size:11px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
+.token-next-hint span{color:var(--text2);font-weight:500}
+.tokens-section-tap{font-size:10px;color:var(--text3);margin-top:5px;letter-spacing:0.2px}
+
+/* === TOKENS PAGE === */
+.tokens-page{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.25,1,0.5,1);overflow-y:auto;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom)+20px)}
+.tokens-page.open{transform:translateY(0)}
+.tp-topbar{display:flex;align-items:center;padding:14px 20px 8px;gap:12px;position:sticky;top:0;background:var(--bg);z-index:1}
+.tp-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0}
+.tp-title{font-size:17px;font-weight:700;color:var(--text)}
+.tp-habit{font-size:13px;color:var(--text3);text-align:center;padding:0 20px 16px}
+/* Tier colors */
+:root{--bronze:#cd7f32;--silver:#b0b0b8;--gold:#ffd60a;--plat:#bf9fff}
+/* Next token card */
+.tp-next{margin:0 20px 20px;border-radius:18px;padding:22px 20px 18px;text-align:center;position:relative;overflow:hidden}
+.tp-next::before{content:'';position:absolute;inset:0;opacity:0.07;background:radial-gradient(circle at 50% 0%,#fff,transparent 70%)}
+.tp-next-tier-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.tp-next-rank{font-size:58px;font-weight:800;font-family:Georgia,serif;line-height:1;margin-bottom:4px}
+.tp-next-label{font-size:17px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:18px}
+.tp-next-bar-track{height:5px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.tp-next-bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.tp-next-meta{display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.55)}
+.tp-next-meta strong{color:rgba(255,255,255,0.85);font-weight:700}
+.tp-no-next{margin:0 20px 20px;padding:20px;background:var(--surface);border-radius:16px;text-align:center;color:var(--text2);font-size:14px}
+/* Section */
+.tp-section{padding:0 20px;margin-bottom:8px}
+.tp-section-header{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;padding:0 4px}
+/* Token row */
+.tp-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;margin-bottom:4px;background:rgba(255,255,255,0.03);transition:transform 0.15s}
+.tp-row.future{opacity:0.38}
+.tp-row-rank{font-size:18px;font-weight:800;font-family:Georgia,serif;min-width:38px;text-align:center;line-height:1}
+.tp-row-info{flex:1;min-width:0}
+.tp-row-label{font-size:14px;font-weight:600;color:var(--text)}
+.tp-row-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.tp-tier-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap}
+
+/* === CELEBRATION FLIP === */
+@keyframes cardFlip{0%{transform:rotateY(-90deg) scale(0.85);opacity:0}55%{transform:rotateY(8deg) scale(1.06)}100%{transform:rotateY(0deg) scale(1);opacity:1}}
 
 /* === ACTION BUTTONS === */
 .action-row{display:flex;gap:16px;padding:12px 20px 8px;justify-content:center;animation:fadeUp 0.35s ease-out both;animation-delay:0.3s}
@@ -189,7 +227,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 /* === CELEBRATION === */
 .celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:500;opacity:0;pointer-events:none;transition:opacity 0.3s}
 .celebration.active{opacity:1;pointer-events:all}
-.celebration .cel-emoji{font-size:72px;animation:celBounce 0.5s ease}
+.celebration .cel-emoji{font-size:72px;animation:cardFlip 0.55s cubic-bezier(0.25,1,0.5,1) both;perspective:600px}
 .celebration .cel-title{font-size:24px;font-weight:700;margin:16px 0 8px;text-align:center;padding:0 20px}
 .celebration .cel-sub{font-size:14px;color:var(--text2);text-align:center;max-width:280px;line-height:1.5}
 .celebration .btn-primary{width:auto;padding:12px 36px;margin-top:24px}
@@ -303,6 +341,19 @@ function getAlcDecimals(s){
   return Math.max(4,Math.ceil(-Math.log10(changePerTick))+1);
 }
 
+function getTokenTier(idx){
+  if(idx<5)return{name:'Бронза',color:'var(--bronze)',bg:'rgba(205,127,50,0.15)',glow:'rgba(205,127,50,0.35)'};
+  if(idx<10)return{name:'Серебро',color:'var(--silver)',bg:'rgba(176,176,184,0.15)',glow:'rgba(176,176,184,0.35)'};
+  if(idx<15)return{name:'Золото',color:'var(--gold)',bg:'rgba(255,214,10,0.15)',glow:'rgba(255,214,10,0.35)'};
+  return{name:'Платина',color:'var(--plat)',bg:'rgba(191,159,255,0.15)',glow:'rgba(191,159,255,0.35)'};
+}
+function formatTimeLeft(secs){
+  if(secs<=0)return'—';
+  const d=Math.floor(secs/86400),h=Math.floor((secs%86400)/3600),m=Math.floor((secs%3600)/60);
+  if(d>0)return d+' дн '+(h>0?h+' ч':'');
+  if(h>0)return h+' ч '+(m>0?m+' мин':'');
+  return m+' мин';
+}
 function isAlcohol(name){return name&&/алкоголь/i.test(name)}
 function getRiskFns(name){
   return isAlcohol(name)
@@ -435,11 +486,18 @@ function render(){
 
     // Active token
     const topBadge=getTopBadge(e.totalSeconds);
-    html+=`<div class="tokens-section" style="margin-top:14px">
-      <div class="tokens-title">Активный жетон</div>
+    const topIdx=topBadge?MILESTONES.indexOf(topBadge):- 1;
+    const topTier=topIdx>=0?getTokenTier(topIdx):null;
+    const nextForHint=MILESTONES.find(m=>e.totalSeconds<m.sec);
+    const timeToNext=nextForHint?Math.max(0,nextForHint.sec-e.totalSeconds):0;
+    html+=`<div class="tokens-section" style="margin-top:14px" onclick="openTokensPage()">
+      <div class="tokens-title">Активный жетон ›</div>
       ${topBadge?`<div class="tokens-row">
-        <span class="token earned">${topBadge.rank} · ${topBadge.label}</span>
-      </div>`:`<div class="tokens-row"><span class="token locked">🔒 Пока нет жетонов</span></div>`}
+        <span class="token earned" style="color:${topTier.color};background:${topTier.bg};border-color:${topTier.glow}">${topBadge.rank} · ${topBadge.label}</span>
+      </div>
+      ${nextForHint?`<div class="token-next-hint">До ${nextForHint.rank} · ${nextForHint.label}: <span>${formatTimeLeft(timeToNext)}</span></div>`:'<div class="token-next-hint" style="color:var(--gold)">Все жетоны получены!</div>'}
+      `:`<div class="tokens-row"><span class="token locked">🔒 Пока нет жетонов</span></div>
+      ${nextForHint?`<div class="token-next-hint">Первый жетон через: <span>${formatTimeLeft(timeToNext)}</span></div>`:''}`}
     </div>`;
 
     // Old tokens
@@ -581,6 +639,61 @@ function render(){
     </div>`;
   }
 
+  // Tokens page
+  {
+    const th=data.habits.find(x=>x.id===activeHabitId);
+    const tEl=th?getElapsed(th.quitDate):{totalSeconds:0};
+    const earnedMs=MILESTONES.filter(m=>tEl.totalSeconds>=m.sec);
+    const futureMs=MILESTONES.filter(m=>tEl.totalSeconds<m.sec);
+    const nextM=futureMs[0]||null;
+    const nextIdx=nextM?MILESTONES.indexOf(nextM):MILESTONES.length;
+    const nextTier=getTokenTier(nextIdx);
+    const nextPrev=nextIdx>0?MILESTONES[nextIdx-1]:null;
+    const nextProg=nextM?(nextPrev?Math.min(100,((tEl.totalSeconds-nextPrev.sec)/(nextM.sec-nextPrev.sec))*100):Math.min(100,(tEl.totalSeconds/nextM.sec)*100)):100;
+    const nextLeft=nextM?Math.max(0,nextM.sec-tEl.totalSeconds):0;
+    const habitColor=th?th.color:'#2aabee';
+    html+=`<div class="tokens-page ${activeModal==='tokensPage'?'open':''}" id="tokens-page">
+      <div class="tp-topbar">
+        <button class="tp-back" onclick="closeTokensPage()">‹ Назад</button>
+        <div class="tp-title">Жетоны</div>
+      </div>
+      ${th?`<div class="tp-habit">${th.name} · ${tEl.days>0?tEl.days+' дн ':''} ${tEl.hours} ч без привычки</div>`:''}
+      ${nextM?`<div class="tp-next" style="background:${nextTier.bg};border:1px solid ${nextTier.glow}">
+        <div class="tp-next-tier-label" style="color:${nextTier.color}">${nextTier.name}</div>
+        <div class="tp-next-rank" style="color:${nextTier.color}">${nextM.rank}</div>
+        <div class="tp-next-label">${nextM.label}</div>
+        <div class="tp-next-bar-track"><div class="tp-next-bar-fill" style="width:${nextProg}%;background:${nextTier.color}"></div></div>
+        <div class="tp-next-meta"><span><strong>${Math.floor(nextProg)}%</strong> выполнено</span><span>Осталось: <strong>${formatTimeLeft(nextLeft)}</strong></span></div>
+      </div>`:`<div class="tp-no-next">🏆 Все жетоны получены!</div>`}
+      ${earnedMs.length>0?`<div class="tp-section">
+        <div class="tp-section-header">Получено · ${earnedMs.length}</div>
+        ${[...earnedMs].reverse().map(m=>{
+          const mIdx=MILESTONES.indexOf(m);
+          const tier=getTokenTier(mIdx);
+          const earnDate=th?new Date(new Date(th.quitDate).getTime()+m.sec*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):'';
+          return`<div class="tp-row">
+            <div class="tp-row-rank" style="color:${tier.color}">${m.rank}</div>
+            <div class="tp-row-info"><div class="tp-row-label">${m.label}</div><div class="tp-row-sub">${earnDate}</div></div>
+            <div class="tp-tier-badge" style="color:${tier.color};background:${tier.bg}">${tier.name}</div>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+      ${futureMs.length>0?`<div class="tp-section">
+        <div class="tp-section-header">Впереди · ${futureMs.length}</div>
+        ${futureMs.slice(1).map(m=>{
+          const mIdx=MILESTONES.indexOf(m);
+          const tier=getTokenTier(mIdx);
+          const left=Math.max(0,m.sec-tEl.totalSeconds);
+          return`<div class="tp-row future">
+            <div class="tp-row-rank" style="color:${tier.color}">${m.rank}</div>
+            <div class="tp-row-info"><div class="tp-row-label">${m.label}</div><div class="tp-row-sub">через ${formatTimeLeft(left)}</div></div>
+            <div class="tp-tier-badge" style="color:${tier.color};background:${tier.bg}">${tier.name}</div>
+          </div>`;
+        }).join('')}
+      </div>`:''}
+    </div>`;
+  }
+
   // Celebration
   if(celebrationData){
     html+=`<div class="celebration active" onclick="closeCelebration()">
@@ -598,7 +711,9 @@ function render(){
 function toggleSideMenu(){sideMenuOpen=!sideMenuOpen;render()}
 function closeSideMenu(){sideMenuOpen=false;render()}
 function selectHabit(id){activeHabitId=id;sideMenuOpen=false;render()}
-function openAllTokens(){activeModal='allTokens';render()}
+function openAllTokens(){activeModal='tokensPage';render()}
+function openTokensPage(){activeModal='tokensPage';render()}
+function closeTokensPage(){activeModal=null;render()}
 
 function openAddModal(){
   activeModal='add';editingId=null;sideMenuOpen=false;
