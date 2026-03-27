@@ -232,17 +232,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 /* === RISK CHART PAGE === */
 .chart-page{position:fixed;inset:0;background:var(--bg);z-index:300;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.25,1,0.5,1);display:flex;flex-direction:column;padding-top:var(--safe-top)}
 .chart-page.open{transform:translateY(0)}
-.chart-topbar{display:flex;align-items:center;padding:14px 20px 8px;gap:12px}
-.chart-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:4px}
-.chart-title{font-size:17px;font-weight:700;color:var(--text)}
+.chart-topbar{display:flex;align-items:center;padding:14px 20px 8px;gap:12px;position:relative}
+.chart-back{background:none;border:none;color:var(--accent);font-size:16px;font-weight:400;font-family:inherit;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:1px;z-index:1}
+.chart-back-chev{font-size:22px;font-weight:300;line-height:1;margin-right:1px}
+.chart-title{font-size:17px;font-weight:700;color:var(--text);position:absolute;left:50%;transform:translateX(-50%);pointer-events:none}
 .chart-live{text-align:center;padding:4px 20px 6px}
 .chart-live-num{display:inline-flex;align-items:baseline;gap:1px;font-variant-numeric:tabular-nums}
 .clr-int{font-size:42px;font-weight:700;line-height:1}
 .clr-dot{font-size:32px;font-weight:700;line-height:1}
 .clr-dec{font-size:22px;font-weight:600;line-height:1;opacity:.75}
 .clr-pct{font-size:20px;font-weight:600;margin-left:2px;opacity:.45;line-height:1}
-.clr-phase{font-size:12px;font-weight:600;margin-top:4px}
-.chart-motive{margin:0 20px 8px;padding:10px 14px;background:rgba(48,209,88,0.1);border-radius:12px;font-size:13px;font-weight:600;color:#30d158;text-align:center;animation:fadeUp .3s ease-out}
+.clr-phase{font-size:13px;font-weight:600;margin-top:5px}
+.clr-motive{font-size:12px;color:var(--text2);margin-top:4px;text-align:center;padding:0 24px;line-height:1.4}
 .chart-range{display:flex;gap:6px;padding:0 20px 8px;justify-content:center}
 .crb{background:var(--surface);border:none;border-radius:20px;padding:6px 16px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
 .crb.active{background:var(--accent);color:#fff}
@@ -458,6 +459,15 @@ function getRiskPhase(risk,alc){
   if(risk>8)return{label:'Становится легче',color:'#ffd60a',bg:'rgba(255,214,10,0.12)'};
   return{label:'Минимальный риск',color:'#30d158',bg:'rgba(48,209,88,0.12)'};
 }
+function getChartMotive(risk){
+  if(risk>=80)return'Первые шаги — самые тяжёлые. Именно сейчас ты сильнее всего';
+  if(risk>=50)return'Тело перестраивается. Тяга временна — свобода навсегда';
+  if(risk>=25)return'Самое страшное уже позади. Ты это прошёл';
+  if(risk>=10)return'Каждый день делает тебя чуть свободнее';
+  if(risk>=5)return'Самый сложный период уже позади';
+  if(risk>=1)return'Это больше не власть над тобой';
+  return'Ты победил. Береги это';
+}
 let currentQuoteIndex=Math.floor(Math.random()*QUOTES.length);
 function getQuote(){return QUOTES[currentQuoteIndex]}
 function refreshQuote(){
@@ -501,7 +511,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.81</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.9</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -727,10 +737,9 @@ function render(){
     const chRisk=ch?getRiskFns(ch.name).riskFn(getElapsed(ch.quitDate).totalSeconds):100;
     const chPhase=ch?getRiskPhase(chRisk,chAlc):{color:'#fff',label:''};
     const chStr=chRisk.toFixed(1);const chDot=chStr.indexOf('.');
-    const showMotive=ch&&chRisk<50;
     html+=`<div class="chart-page ${activeModal==='riskChart'?'open':''}" id="chart-page">
       <div class="chart-topbar">
-        <button class="chart-back" onclick="closeRiskChart()">‹ Назад</button>
+        <button class="chart-back" onclick="closeRiskChart()"><span class="chart-back-chev">‹</span>Назад</button>
         <div class="chart-title">Шанс рецидива</div>
       </div>
       <div class="chart-live">
@@ -738,8 +747,8 @@ function render(){
           <span class="clr-int" style="color:${chPhase.color}">${chStr.substring(0,chDot)}</span><span class="clr-dot" style="color:${chPhase.color}">.</span><span class="clr-dec">${chStr.substring(chDot+1)}</span><span class="clr-pct">%</span>
         </div>
         <div class="clr-phase" style="color:${chPhase.color}">${chPhase.label}</div>
+        <div class="clr-motive">${ch?getChartMotive(chRisk):''}</div>
       </div>
-      ${showMotive?`<div class="chart-motive">Самый сложный период уже позади</div>`:''}
       <div class="chart-range">
         <button class="crb ${chartRange===30?'active':''}" data-days="30" onclick="setChartRange(30)">1 мес</button>
         <button class="crb ${chartRange===90?'active':''}" data-days="90" onclick="setChartRange(90)">3 мес</button>
@@ -1102,7 +1111,7 @@ function updateChartLive(){
   const {riskFn,decFn}=getRiskFns(h.name);
   const s=(Date.now()-new Date(h.quitDate).getTime())/1000;
   const risk=riskFn(s);
-  const str=risk.toFixed(decFn(s));
+  const str=risk.toFixed(1);
   const di=str.indexOf('.');
   const phase=getRiskPhase(risk,alc);
   const iEl=document.querySelector('.clr-int');
@@ -1113,6 +1122,8 @@ function updateChartLive(){
   if(fEl)fEl.textContent=str.substring(di+1);
   const pEl=document.querySelector('.clr-phase');
   if(pEl){pEl.textContent=phase.label;pEl.style.color=phase.color}
+  const mEl=document.querySelector('.clr-motive');
+  if(mEl)mEl.textContent=getChartMotive(risk);
 }
 
 function setupChartInteraction(){
