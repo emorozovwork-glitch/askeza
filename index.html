@@ -370,9 +370,9 @@ const QUOTES=[
 ];
 
 const HABIT_PRESETS=[
-  {name:'Курение',  emoji:'🚬', color:'#ff453a'},
-  {name:'Алкоголь', emoji:'🍺', color:'#ff9f0a'},
-  {name:'Соцсети',  emoji:'📱', color:'#bf5af2'},
+  {name:'Курение',   emoji:'🚬', color:'#ff453a'},
+  {name:'Алкоголь',  emoji:'🍺', color:'#ff9f0a'},
+  {name:'Марихуана', emoji:'🌿', color:'#4cd964'},
 ];
 const BAR_COLORS=[
   ['#ff3830','#cc0808'],  // years   — красный,  насыщенность 100%
@@ -408,26 +408,25 @@ function getTopOldToken(oldTokens){
   return best;
 }
 
-// Risk calculations — Smoking (B=0.50, стремительное снижение)
-function riskFromSeconds(s){return 99/Math.sqrt(1+s/86400)+1}
-function speedFromSeconds(s){return -99/(2*86400*Math.pow(1+s/86400,1.5))}
-function getRiskDecimals(s){
-  const spd=Math.abs(speedFromSeconds(s));
-  const changePerTick=spd*0.1;
-  if(changePerTick<=0)return 8;
-  return Math.max(4,Math.ceil(-Math.log10(changePerTick))+1);
-}
+// Risk calculations — Smoking (B=0.50)
+function riskFromSeconds(s){return 95/Math.pow(1+s/86400,0.50)+1}
+function speedFromSeconds(s){return -95*0.50/(86400*Math.pow(1+s/86400,1.50))}
+function getRiskDecimals(s){const spd=Math.abs(speedFromSeconds(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
 
-// Risk calculations — Alcohol (B=0.30, пологий старт, длинный хвост)
-// Источники: NIAAA 2023, Recovery Village, PMC Veterans study, J. Studies on Alcohol
+// Risk calculations — Alcohol (B=0.30)
 function alcRisk(s){return 88/Math.pow(1+s/86400,0.30)+4}
 function alcSpeed(s){return -88*0.30/(86400*Math.pow(1+s/86400,1.30))}
-function getAlcDecimals(s){
-  const spd=Math.abs(alcSpeed(s));
-  const changePerTick=spd*0.1;
-  if(changePerTick<=0)return 8;
-  return Math.max(4,Math.ceil(-Math.log10(changePerTick))+1);
-}
+function getAlcDecimals(s){const spd=Math.abs(alcSpeed(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
+
+// Risk calculations — Marijuana (B=0.40)
+function weedRisk(s){return 85/Math.pow(1+s/86400,0.40)+5}
+function weedSpeed(s){return -85*0.40/(86400*Math.pow(1+s/86400,1.40))}
+function getWeedDecimals(s){const spd=Math.abs(weedSpeed(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
+
+// Risk calculations — Generic (B=0.7134, для своей привычки)
+function genericRisk(s){return 90/Math.pow(1+s/86400,0.7134)}
+function genericSpeedFn(s){return -90*0.7134/(86400*Math.pow(1+s/86400,1.7134))}
+function getGenericDecimals(s){const spd=Math.abs(genericSpeedFn(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
 
 function getTokenTier(idx){
   if(idx<5)return{name:'Бронза',color:'var(--bronze)',bg:'rgba(205,127,50,0.15)',glow:'rgba(205,127,50,0.35)'};
@@ -443,10 +442,13 @@ function formatTimeLeft(secs){
   return m+' мин';
 }
 function isAlcohol(name){return name&&/алкоголь/i.test(name)}
+function isWeed(name){return name&&/марихуан|конопл/i.test(name)}
+function isSmoking(name){return name&&/курен/i.test(name)}
 function getRiskFns(name){
-  return isAlcohol(name)
-    ?{riskFn:alcRisk,decFn:getAlcDecimals}
-    :{riskFn:riskFromSeconds,decFn:getRiskDecimals};
+  if(isAlcohol(name))return{riskFn:alcRisk,decFn:getAlcDecimals};
+  if(isWeed(name))return{riskFn:weedRisk,decFn:getWeedDecimals};
+  if(isSmoking(name))return{riskFn:riskFromSeconds,decFn:getRiskDecimals};
+  return{riskFn:genericRisk,decFn:getGenericDecimals};
 }
 
 function getRiskPhase(risk,alc){
@@ -521,7 +523,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.92</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v0.93</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
