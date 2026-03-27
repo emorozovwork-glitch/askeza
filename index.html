@@ -324,12 +324,12 @@ const HABIT_PRESETS=[
   {name:'Азартные игры',color:'#ffd60a'},
 ];
 const BAR_COLORS=[
-  ['#ff453a','#d12219'],  // years   — красный        (самый насыщенный)
-  ['#ff9f0a','#cc7200'],  // months  — оранжевый
-  ['#32ade6','#1888c0'],  // days    — голубой (cyan)
-  ['#5e5ce6','#3a38c0'],  // hours   — синий
-  ['#bf5af2','#9830cc'],  // minutes — фиолетовый
-  ['#9a9a9f','#6e6e73'],  // seconds — серый          (почти нейтральный)
+  ['#ff3830','#cc0808'],  // years   — красный,  насыщенность 100%
+  ['#f07810','#c05000'],  // months  — оранжевый, насыщенность 85%
+  ['#30a8e0','#1080c0'],  // days    — голубой,   насыщенность 70%
+  ['#5050c8','#3535a0'],  // hours   — синий,     насыщенность 55%
+  ['#7a6090','#5a4070'],  // minutes — сиренево-серый, насыщенность 30%
+  ['#a0a0a8','#787880'],  // seconds — почти серый,    насыщенность 5%
 ];
 
 function loadData(){try{const d=JSON.parse(localStorage.getItem(STORAGE_KEY));return d&&d.habits?d:{habits:[]}}catch{return{habits:[]}}}
