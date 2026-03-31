@@ -416,9 +416,9 @@ function getTopOldToken(oldTokens){
   return best;
 }
 
-// Risk calculations — Smoking (B=0.50)
-function riskFromSeconds(s){return 95/Math.pow(1+s/86400,0.50)+1}
-function speedFromSeconds(s){return -95*0.50/(86400*Math.pow(1+s/86400,1.50))}
+// Craving — Smoking (горб отмены, пик ~102% в 14ч, плато 7%)
+function riskFromSeconds(s){const d=s/86400;return 7+73/Math.pow(1+d,0.55)+133*d*Math.exp(-1.2*d)}
+function speedFromSeconds(s){const d=s/86400;return -40.15/(86400*Math.pow(1+d,1.55))+133*(1-1.2*d)*Math.exp(-1.2*d)/86400}
 function getRiskDecimals(s){const spd=Math.abs(speedFromSeconds(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
 
 // Risk calculations — Alcohol (B=0.30)
@@ -479,7 +479,28 @@ function formatMenuTime(el){
   if(el.hours>0)return el.hours+' ч.';
   return Math.floor(el.totalSeconds/60)+' мин.';
 }
-function getChartMotive(risk){
+function getSmokingPhase(v){
+  if(v>90)return{label:'Тяга нарастает',color:'#ff453a',bg:'rgba(255,69,58,0.12)'};
+  if(v>75)return{label:'Пик синдрома отмены',color:'#ff6930',bg:'rgba(255,105,48,0.12)'};
+  if(v>50)return{label:'Тяга убывает',color:'#ff9f0a',bg:'rgba(255,159,10,0.12)'};
+  if(v>25)return{label:'Становится легче',color:'#ffd60a',bg:'rgba(255,214,10,0.12)'};
+  if(v>10)return{label:'Тяга слабеет',color:'#30d158',bg:'rgba(48,209,88,0.12)'};
+  return{label:'Минимальная тяга',color:'#30d158',bg:'rgba(48,209,88,0.12)'};
+}
+function getPhaseForHabit(value,name){
+  if(isSmoking(name))return getSmokingPhase(value);
+  return getRiskPhase(value,isAlcohol(name));
+}
+function getMetricLabel(name){return isSmoking(name)?'Тяга':'Шанс рецидива'}
+function getChartMotive(risk,name){
+  if(isSmoking(name)){
+    if(risk>=90)return'Первые часы самые тяжёлые — это нормально';
+    if(risk>=75)return'Пик уже близко. После него — только легче';
+    if(risk>=50)return'Тяга пошла на спад. Худшее позади';
+    if(risk>=25)return'С каждым днём тяга слабеет';
+    if(risk>=10)return'Ты почти свободен';
+    return'Тяга больше не управляет тобой';
+  }
   if(risk>=80)return'Первые шаги — самые тяжёлые. Именно сейчас ты сильнее всего';
   if(risk>=50)return'Тело перестраивается. Тяга временна — свобода навсегда';
   if(risk>=25)return'Самое страшное уже позади. Ты это прошёл';
@@ -553,18 +574,17 @@ function render(){
 
     // Risk counter
     const riskS=e.totalSeconds;
-    const _alc=isAlcohol(h.name);
     const {riskFn,decFn}=getRiskFns(h.name);
     const risk=riskFn(riskS);
     const rDec=decFn(riskS);
-    const phase=getRiskPhase(risk,_alc);
+    const phase=getPhaseForHabit(risk,h.name);
     const riskStr=risk.toFixed(rDec);
     const dotIdx=riskStr.indexOf('.');
     const rInt=riskStr.substring(0,dotIdx);
     const rFrac=riskStr.substring(dotIdx+1);
     html+=`<div class="risk-block" data-quit="${h.quitDate}" data-name="${h.name}" onclick="openRiskChart()" style="cursor:pointer">
       <div class="risk-center">
-        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500">Шанс рецидива</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:500">${getMetricLabel(h.name)}</div>
         <div class="risk-number" id="risk-num">
           <span class="risk-int">${rInt}</span><span class="risk-dot">.</span><span class="risk-dec">${rFrac}</span><span class="risk-pct">%</span>
         </div>
@@ -763,27 +783,33 @@ function render(){
   // Risk chart page
   {
     const ch=data.habits.find(x=>x.id===activeHabitId);
-    const chAlc=ch?isAlcohol(ch.name):false;
     const chRisk=ch?getRiskFns(ch.name).riskFn(getElapsed(ch.quitDate).totalSeconds):100;
-    const chPhase=ch?getRiskPhase(chRisk,chAlc):{color:'#fff',label:''};
+    const chPhase=ch?getPhaseForHabit(chRisk,ch.name):{color:'#fff',label:''};
     const chStr=chRisk.toFixed(1);const chDot=chStr.indexOf('.');
     html+=`<div class="chart-page ${activeModal==='riskChart'?'open':''}" id="chart-page">
       <div class="chart-topbar">
         <button class="chart-back" onclick="closeRiskChart()">←</button>
       </div>
       <div class="chart-live">
-        <span class="clr-label">Шанс рецидива</span>
+        <span class="clr-label">${ch?getMetricLabel(ch.name):'Шанс рецидива'}</span>
         <div class="chart-live-num">
           <span class="clr-int" style="color:${chPhase.color}">${chStr.substring(0,chDot)}</span><span class="clr-dot" style="color:${chPhase.color}">.</span><span class="clr-dec">${chStr.substring(chDot+1)}</span><span class="clr-pct"> %</span>
         </div>
-        <div class="clr-motive">${ch?getChartMotive(chRisk):''}</div>
+        <div class="clr-motive">${ch?getChartMotive(chRisk,ch.name):''}</div>
       </div>
       <div class="chart-canvas-wrap"><canvas id="risk-chart-canvas"></canvas></div>
       <div class="chart-legend">
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff453a"></div>Критическая зона</div>
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff9f0a"></div>Опасный период</div>
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ffd60a"></div>Становится легче</div>
-        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#30d158"></div>Минимальный риск</div>
+        ${ch&&isSmoking(ch.name)?`
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff453a"></div>Тяга нарастает</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff9f0a"></div>Тяга убывает</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ffd60a"></div>Становится легче</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#30d158"></div>Минимальная тяга</div>
+        `:`
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff453a"></div>Критическая зона</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ff9f0a"></div>Опасный период</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#ffd60a"></div>Становится легче</div>
+          <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#30d158"></div>Минимальный риск</div>
+        `}
       </div>
       ${(isSmoking(ch&&ch.name)||isAlcohol(ch&&ch.name)||isWeed(ch&&ch.name))?'<div class="chart-info">Основано на научных данных</div>':''}
       <div class="chart-range">
@@ -1187,13 +1213,12 @@ function setChartRange(days){
 
 function updateChartLive(){
   const h=data.habits.find(x=>x.id===activeHabitId);if(!h)return;
-  const alc=isAlcohol(h.name);
   const {riskFn,decFn}=getRiskFns(h.name);
   const s=(Date.now()-new Date(h.quitDate).getTime())/1000;
   const risk=riskFn(s);
   const str=risk.toFixed(1);
   const di=str.indexOf('.');
-  const phase=getRiskPhase(risk,alc);
+  const phase=getPhaseForHabit(risk,h.name);
   const iEl=document.querySelector('.clr-int');
   const dEl=document.querySelector('.clr-dot');
   const fEl=document.querySelector('.clr-dec');
@@ -1203,7 +1228,7 @@ function updateChartLive(){
   const pEl=document.querySelector('.clr-phase');
   if(pEl){pEl.textContent=phase.label;pEl.style.color=phase.color}
   const mEl=document.querySelector('.clr-motive');
-  if(mEl)mEl.textContent=getChartMotive(risk);
+  if(mEl)mEl.textContent=getChartMotive(risk,h.name);
 }
 
 function setupChartInteraction(){
@@ -1225,7 +1250,6 @@ function setupChartInteraction(){
 function drawRiskChart(touchDay){
   const canvas=document.getElementById('risk-chart-canvas');if(!canvas)return;
   const h=data.habits.find(x=>x.id===activeHabitId);if(!h)return;
-  const alc=isAlcohol(h.name);
   const {riskFn}=getRiskFns(h.name);
   const elapsed=getElapsed(h.quitDate);
   const currentDays=elapsed.totalSeconds/86400;
@@ -1239,13 +1263,16 @@ function drawRiskChart(touchDay){
 
   const pad={top:14,right:16,bottom:32,left:42};
   const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  const yMax=isSmoking(h.name)?110:100;
   function xPx(d){return pad.left+d/xMax*cw}
-  function yPx(r){return pad.top+ch-(Math.min(r,100)/100)*ch}
+  function yPx(r){return pad.top+ch-(Math.min(r,yMax)/yMax)*ch}
 
   // Phase zones
-  const zones=alc
-    ?[[60,100,'rgba(255,69,58,0.28)'],[35,60,'rgba(255,159,10,0.22)'],[15,35,'rgba(255,214,10,0.16)'],[0,15,'rgba(48,209,88,0.18)']]
-    :[[50,100,'rgba(255,69,58,0.28)'],[20,50,'rgba(255,159,10,0.22)'],[8,20,'rgba(255,214,10,0.16)'],[0,8,'rgba(48,209,88,0.18)']];
+  const zones=isSmoking(h.name)
+    ?[[90,yMax,'rgba(255,69,58,0.28)'],[50,90,'rgba(255,159,10,0.22)'],[20,50,'rgba(255,214,10,0.16)'],[0,20,'rgba(48,209,88,0.18)']]
+    :isAlcohol(h.name)
+      ?[[60,100,'rgba(255,69,58,0.28)'],[35,60,'rgba(255,159,10,0.22)'],[15,35,'rgba(255,214,10,0.16)'],[0,15,'rgba(48,209,88,0.18)']]
+      :[[50,100,'rgba(255,69,58,0.28)'],[20,50,'rgba(255,159,10,0.22)'],[8,20,'rgba(255,214,10,0.16)'],[0,8,'rgba(48,209,88,0.18)']];
   zones.forEach(([lo,hi,col])=>{ctx.fillStyle=col;ctx.fillRect(pad.left,yPx(hi),cw,yPx(lo)-yPx(hi))});
 
   // Grid
@@ -1282,7 +1309,7 @@ function drawRiskChart(touchDay){
   // Current position marker
   if(currentDays<=xMax){
     const cx2=xPx(currentDays),cy2=yPx(riskFn(elapsed.totalSeconds));
-    const phase=getRiskPhase(riskFn(elapsed.totalSeconds),alc);
+    const phase=getPhaseForHabit(riskFn(elapsed.totalSeconds),h.name);
     ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
     ctx.beginPath();ctx.moveTo(cx2,pad.top);ctx.lineTo(cx2,pad.top+ch);ctx.stroke();ctx.setLineDash([]);
     const grd=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,12);
@@ -1300,7 +1327,7 @@ function drawRiskChart(touchDay){
   // Touch crosshair
   if(touchDay!==null){
     const tx=xPx(touchDay),tr=riskFn(touchDay*86400),ty=yPx(tr);
-    const tPhase=getRiskPhase(tr,alc);
+    const tPhase=getPhaseForHabit(tr,h.name);
     // Lines
     ctx.strokeStyle='rgba(255,255,255,0.45)';ctx.lineWidth=1;ctx.setLineDash([]);
     ctx.beginPath();ctx.moveTo(tx,pad.top);ctx.lineTo(tx,pad.top+ch);ctx.stroke();
@@ -1338,13 +1365,12 @@ setInterval(()=>{
   const quit=block.dataset.quit;if(!quit)return;
   const name=block.dataset.name||'';
   const s=(Date.now()-new Date(quit).getTime())/1000;
-  const alc=isAlcohol(name);
   const {riskFn,decFn}=getRiskFns(name);
   const risk=riskFn(s);
   const dec=decFn(s);
   const str=risk.toFixed(dec);
   const di=str.indexOf('.');
-  const phase=getRiskPhase(risk,alc);
+  const phase=getPhaseForHabit(risk,name);
   const el=document.getElementById('risk-num');
   if(el){
     el.querySelector('.risk-int').textContent=str.substring(0,di);
