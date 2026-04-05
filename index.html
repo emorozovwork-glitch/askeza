@@ -260,7 +260,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .crb:active{transform:scale(0.95)}
 .chart-canvas-wrap{flex:1;padding:0 8px;min-height:0;position:relative;touch-action:none;display:flex;align-items:stretch}
 .chart-canvas-wrap canvas{width:100%!important;height:100%!important;display:block;cursor:crosshair}
-.chart-info{padding:2px 20px 10px;font-size:11px;color:var(--text3);text-align:center}
+.chart-info{padding:2px 20px 6px;font-size:11px;color:var(--text3);text-align:center;cursor:pointer;user-select:none}
+.chart-info-arrow{display:inline-block;transition:transform .25s ease;font-size:12px}
+.chart-info-body{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .35s ease;opacity:0;font-size:13px;color:var(--text2);line-height:1.55;padding:0 24px}
+.chart-info-body.open{max-height:300px;opacity:1;padding:0 24px 16px}
 
 /* === CELEBRATION === */
 .celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:600;opacity:0;pointer-events:none;transition:opacity 0.3s}
@@ -554,7 +557,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.3</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.4</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -805,9 +808,10 @@ function render(){
         <button class="crb ${chartRange===180?'active':''}" data-days="180" onclick="setChartRange(180)">6 мес</button>
         <button class="crb ${chartRange===365?'active':''}" data-days="365" onclick="setChartRange(365)">1 год</button>
         <button class="crb ${chartRange===1825?'active':''}" data-days="1825" onclick="setChartRange(1825)">5 лет</button>
+        <button class="crb ${chartRange===3650?'active':''}" data-days="3650" onclick="setChartRange(3650)">10 лет</button>
       </div>
       <div class="chart-canvas-wrap"><canvas id="risk-chart-canvas"></canvas></div>
-      ${(isSmoking(ch&&ch.name)||isAlcohol(ch&&ch.name)||isWeed(ch&&ch.name))?'<div class="chart-info">Основано на научных данных</div>':''}
+      ${(isSmoking(ch&&ch.name)||isAlcohol(ch&&ch.name)||isWeed(ch&&ch.name))?`<div class="chart-info" onclick="toggleChartInfo()">Основано на научных данных <span class="chart-info-arrow" id="chart-info-arrow">›</span></div><div class="chart-info-body" id="chart-info-body">${getChartInfoText(ch&&ch.name)}</div>`:''}
     </div>`;
   }
 
@@ -1165,6 +1169,23 @@ data.habits.forEach(h=>{
 if(!activeHabitId&&data.habits.length>0)activeHabitId=data.habits[0].id;
 render();requestAnimationFrame(updateTimers);setTimeout(()=>document.body.classList.add('app-ready'),500);
 
+// === CHART INFO POPUP ===
+
+function getChartInfoText(name){
+  if(isSmoking(name))return'График показывает уровень зависимости от никотина. В первые дни тяга особенно сильна — это нормально: мозг перестраивается. Кривая никогда не достигает нуля, потому что нейронные связи сохраняются, но со временем сигнал слабеет настолько, что перестаёт управлять тобой. Ты уже делаешь самое трудное.';
+  if(isAlcohol(name))return'График отражает вероятность рецидива по данным исследований NIAAA. Первые недели — самые уязвимые, но риск снижается с каждым днём трезвости. Кривая стремится к минимуму, но не к нулю: это честный взгляд на природу зависимости. Твоё тело и психика восстанавливаются прямо сейчас.';
+  if(isWeed(name))return'Зависимость от марихуаны реальна, и твой мозг уже начал адаптироваться к жизни без неё. График показывает, как тяга убывает со временем. Она никогда не исчезает полностью — но становится тихим фоном, который ты легко игнорируешь. Каждый день без — это новая нейронная дорожка в сторону свободы.';
+  return'';
+}
+
+function toggleChartInfo(){
+  const body=document.getElementById('chart-info-body');
+  const arrow=document.getElementById('chart-info-arrow');
+  if(!body)return;
+  const open=body.classList.toggle('open');
+  if(arrow)arrow.style.transform=open?'rotate(90deg)':'';
+}
+
 // === RISK CHART ===
 
 function openRiskChart(){
@@ -1172,7 +1193,9 @@ function openRiskChart(){
   const h=data.habits.find(x=>x.id===activeHabitId);
   if(h){
     const days=getElapsed(h.quitDate).totalSeconds/86400;
-    if(days>365)chartRange=1825;
+    if(days>3650)chartRange=Math.ceil(days/365)*365;
+    else if(days>1825)chartRange=3650;
+    else if(days>365)chartRange=1825;
     else if(days>180)chartRange=365;
     else if(days>90)chartRange=180;
     else if(days>30)chartRange=90;
