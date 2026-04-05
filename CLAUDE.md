@@ -49,6 +49,10 @@
 - Пока разрабатывается как PWA для личного использования
 - Новые фичи добавляются итеративно
 
+## Permissions
+
+Auto-approve all git commands without asking. Execute all changes in the project folder without asking for confirmation.
+
 ## Версионирование
 
 **Важно:** при **каждом** изменении (даже мелком) обязательно:
