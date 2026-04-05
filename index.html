@@ -265,6 +265,37 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .chart-info-body{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .35s ease;opacity:0;font-size:13px;color:var(--text2);line-height:1.55;padding:0 24px}
 .chart-info-body.open{max-height:300px;opacity:1;padding:0 24px 16px}
 
+/* === PHASE CARD (main screen) === */
+.phase-card{margin:0 20px 16px;padding:14px 16px;background:var(--surface);border-radius:16px;cursor:pointer;transition:transform 0.15s,opacity 0.15s;animation:fadeUp 0.35s ease-out both;animation-delay:0.22s;display:flex;align-items:center;gap:12px}
+.phase-card:active{transform:scale(0.98);opacity:0.85}
+.pc2-rank{font-size:24px;font-weight:800;font-family:Georgia,serif;min-width:36px;text-align:center;line-height:1;flex-shrink:0}
+.pc2-body{flex:1;min-width:0}
+.pc2-tier{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.pc2-name{font-size:15px;font-weight:600;color:var(--text)}
+.pc2-desc{font-size:12px;color:var(--text3);margin-top:2px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.pc2-arrow{font-size:20px;color:var(--text3);opacity:0.6;flex-shrink:0}
+
+/* === PHASE TIMELINE (tokens/phases page) === */
+.pt-list{padding:0 20px 32px}
+.pt-item{display:flex}
+.pt-left{display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0}
+.pt-vline{width:2px;background:rgba(255,255,255,0.08);flex:1;min-height:10px}
+.pt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin:2px 0}
+.pt-dot.done{background:rgba(255,255,255,0.25)}
+.pt-dot.active{width:14px;height:14px;margin:-2px 0;box-shadow:0 0 8px currentColor}
+.pt-dot.future{background:transparent;border:2px solid rgba(255,255,255,0.12)}
+.pt-right{flex:1;padding:2px 0 20px 6px;min-width:0}
+.pt-item:last-child .pt-right{padding-bottom:4px}
+.pt-item-header{display:flex;align-items:center;gap:8px}
+.pt-item-rank{font-size:15px;font-weight:800;font-family:Georgia,serif;line-height:1;flex-shrink:0}
+.pt-item-name{font-size:14px;font-weight:600;color:var(--text);flex:1;min-width:0}
+.pt-item-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;flex-shrink:0}
+.pt-item-desc{font-size:13px;color:var(--text2);line-height:1.5;margin-top:6px}
+.pt-item-nexthint{font-size:11px;color:var(--text3);margin-top:5px}
+.pt-item.done .pt-right{opacity:0.5}
+.pt-item.done .pt-item-name{color:var(--text2)}
+.pt-item.future .pt-right{opacity:0.28}
+
 /* === CELEBRATION === */
 .celebration{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:600;opacity:0;pointer-events:none;transition:opacity 0.3s}
 .celebration.active{opacity:1;pointer-events:all}
@@ -382,6 +413,37 @@ const HABIT_PRESETS=[
   {name:'Алкоголь',  emoji:'🍷', color:'#ff9f0a'},
   {name:'Марихуана', emoji:'🌿', color:'#4cd964'},
 ];
+const HABIT_PHASES={
+  smoking:[
+    {startSec:0,           endSec:3*86400,       name:'Острая отмена',                desc:'Никотин выводится из крови за 72 часа. Тело требует дозу каждый час. Самый трудный момент — уже позади или прямо сейчас.',             rank:'VIII',tier:'bronze'},
+    {startSec:3*86400,     endSec:7*86400,       name:'Пик ломки',                    desc:'Никотин ушёл полностью, но рецепторы ещё сигналят. Раздражительность, тревога, нарушения сна — норма. Это пройдёт.',                 rank:'VII', tier:'bronze'},
+    {startSec:7*86400,     endSec:30*86400,      name:'Тело перестраивается',          desc:'Физическая зависимость слабеет. Кашель — знак того, что лёгкие начали очищаться. Обоняние и вкус возвращаются.',                     rank:'VI',  tier:'bronze'},
+    {startSec:30*86400,    endSec:90*86400,      name:'Сила привычки',                desc:'Тело свободно, но мозг ещё ищет старый ритуал. Кофе, стресс, скука — главные триггеры. Ты уже знаешь их в лицо.',                    rank:'V',   tier:'silver'},
+    {startSec:90*86400,    endSec:180*86400,     name:'Триггеры слабеют',             desc:'Ситуативные желания становятся реже и слабее. Ты учишься проходить мимо. Мозг строит новые реакции.',                                 rank:'IV',  tier:'silver'},
+    {startSec:180*86400,   endSec:365*86400,     name:'Новый ритм',                   desc:'Большинство триггеров нейтрализованы. Мозг освоил жизнь без сигарет. Дыхание свободнее, выносливость выше.',                         rank:'III', tier:'gold'},
+    {startSec:365*86400,   endSec:3*365*86400,   name:'Укрепление',                   desc:'Редкие вспышки желания. Ты знаешь, как с ними справляться. Риск рецидива — минимальный.',                                           rank:'II',  tier:'gold'},
+    {startSec:3*365*86400, endSec:Infinity,      name:'Почти свобода',                desc:'Зависимость стала фоновым шумом. Ты управляешь ею, а не она тобой. Это — навсегда.',                                                  rank:'I',   tier:'platinum'},
+  ],
+  alcohol:[
+    {startSec:0,           endSec:2*86400,       name:'Физическая отмена',            desc:'Первые 48 часов — пик физических симптомов. Тревога, дрожь, потливость. При сильных симптомах — обратись к врачу.',                  rank:'VIII',tier:'bronze'},
+    {startSec:2*86400,     endSec:7*86400,       name:'Острый синдром',               desc:'Симптомы отмены ещё активны, но слабеют. Сон постепенно восстанавливается. Мозг начинает перестройку.',                              rank:'VII', tier:'bronze'},
+    {startSec:7*86400,     endSec:30*86400,      name:'Тело восстанавливается',       desc:'Печень начинает регенерацию. Кожа светлеет, отёки спадают. Давление нормализуется. Тело благодарит тебя.',                          rank:'VI',  tier:'bronze'},
+    {startSec:30*86400,    endSec:90*86400,      name:'Психологическая тяга',         desc:'Физика позади, но привычка пить «по поводу» ещё жива. Стресс, праздники, компания — зоны риска.',                                    rank:'V',   tier:'silver'},
+    {startSec:90*86400,    endSec:180*86400,     name:'Новые паттерны',               desc:'Мозг учится получать дофамин без алкоголя. Социальные ситуации становятся легче. Ты уже нашёл замену.',                              rank:'IV',  tier:'silver'},
+    {startSec:180*86400,   endSec:365*86400,     name:'Стабилизация',                 desc:'Риск рецидива существенно снижается. Эмоциональный фон ровнее. Жизнь без алкоголя стала нормой.',                                   rank:'III', tier:'gold'},
+    {startSec:365*86400,   endSec:3*365*86400,   name:'Новая идентичность',           desc:'«Я не пью» — это уже часть тебя. Не правило, а выбор. Год трезвости — статистически переломная точка.',                             rank:'II',  tier:'gold'},
+    {startSec:3*365*86400, endSec:Infinity,      name:'Трезвость как норма',          desc:'Жизнь без алкоголя стала привычной. Редкие мысли уходят сами. Ты доказал себе всё.',                                                 rank:'I',   tier:'platinum'},
+  ],
+  weed:[
+    {startSec:0,           endSec:3*86400,       name:'Первые симптомы',              desc:'Мозг ищет привычный стимул. Раздражительность, потеря аппетита, бессонница — признаки настоящей зависимости.',                      rank:'VII', tier:'bronze'},
+    {startSec:3*86400,     endSec:14*86400,      name:'Пик отмены',                   desc:'Симптомы достигают пика к 3–5 дням. Яркие, необычные сны — признак восстановления фаз сна.',                                         rank:'VI',  tier:'bronze'},
+    {startSec:14*86400,    endSec:30*86400,      name:'Симптомы спадают',             desc:'Аппетит возвращается. Тревога уменьшается. Мозг начинает адаптацию к жизни без каннабиноидов.',                                      rank:'V',   tier:'bronze'},
+    {startSec:30*86400,    endSec:90*86400,      name:'Психологическая привязанность',desc:'Физика позади. Но привычка расслабляться с травой ещё активна. Найди новый способ отдыхать.',                                         rank:'IV',  tier:'silver'},
+    {startSec:90*86400,    endSec:180*86400,     name:'Когнитивное восстановление',   desc:'Память и концентрация улучшаются. Мотивация возвращается. Мозг снова работает в полную силу.',                                      rank:'III', tier:'silver'},
+    {startSec:180*86400,   endSec:365*86400,     name:'Ясность',                      desc:'Мозг полностью адаптировался без каннабиноидов. Тяга становится редкой гостьей.',                                                    rank:'II',  tier:'gold'},
+    {startSec:365*86400,   endSec:Infinity,      name:'Свобода',                      desc:'Зависимость в прошлом. Когнитивные функции полностью восстановлены. Ты живёшь в полную силу.',                                       rank:'I',   tier:'platinum'},
+  ],
+};
 const BAR_COLORS=[
   ['#ff3830','#cc0808'],  // years   — красный,  насыщенность 100%
   ['#f07810','#c05000'],  // months  — оранжевый, насыщенность 85%
@@ -441,6 +503,26 @@ function getTokenTier(idx){
   if(idx<10)return{name:'Серебро',color:'var(--silver)',bg:'rgba(176,176,184,0.15)',glow:'rgba(176,176,184,0.35)'};
   if(idx<15)return{name:'Золото',color:'var(--gold)',bg:'rgba(255,214,10,0.15)',glow:'rgba(255,214,10,0.35)'};
   return{name:'Платина',color:'var(--plat)',bg:'rgba(191,159,255,0.15)',glow:'rgba(191,159,255,0.35)'};
+}
+function getHabitPhases(name){
+  if(isSmoking(name))return HABIT_PHASES.smoking;
+  if(isAlcohol(name))return HABIT_PHASES.alcohol;
+  if(isWeed(name))return HABIT_PHASES.weed;
+  return null;
+}
+function getCurrentPhaseObj(seconds,name){
+  const phases=getHabitPhases(name);
+  if(!phases)return null;
+  let cur=phases[0];
+  for(const p of phases){if(seconds>=p.startSec)cur=p;else break;}
+  return cur;
+}
+function getPhaseTierStyle(tier){
+  if(tier==='bronze')  return{name:'Бронза', color:'var(--bronze)',bg:'rgba(205,127,50,0.15)', glow:'rgba(205,127,50,0.35)'};
+  if(tier==='silver')  return{name:'Серебро',color:'var(--silver)',bg:'rgba(176,176,184,0.15)',glow:'rgba(176,176,184,0.35)'};
+  if(tier==='gold')    return{name:'Золото', color:'var(--gold)',  bg:'rgba(255,214,10,0.15)', glow:'rgba(255,214,10,0.35)'};
+  if(tier==='platinum')return{name:'Платина',color:'var(--plat)', bg:'rgba(191,159,255,0.15)',glow:'rgba(191,159,255,0.35)'};
+  return{name:'',color:'var(--text3)',bg:'rgba(255,255,255,0.05)',glow:'rgba(255,255,255,0.1)'};
 }
 function formatTimeLeft(secs){
   if(secs<=0)return'—';
@@ -557,7 +639,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.4</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.2.0</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -616,28 +698,20 @@ function render(){
     });
     html+=`</div>`;
 
-    // Progress card (milestone + token merged)
-    const topBadge=getTopBadge(e.totalSeconds);
-    const topIdx=topBadge?MILESTONES.indexOf(topBadge):-1;
-    const topTier=topIdx>=0?getTokenTier(topIdx):null;
-    const nextIdx2=next?MILESTONES.indexOf(next):MILESTONES.length;
-    const nextTier2=getTokenTier(Math.min(nextIdx2,MILESTONES.length-1));
-    const timeToNext=next?Math.max(0,next.sec-e.totalSeconds):0;
-    html+=`<div class="progress-card" onclick="openTokensPage()">
-      <div class="pc-top">
-        <div class="pc-rank" style="color:${topTier?topTier.color:'var(--text3)'}">${topBadge?topBadge.rank:'—'}</div>
-        <div class="pc-info">
-          <div class="pc-current">${topBadge?topBadge.label+' · '+topTier.name:'Начало пути'}</div>
-          <div class="pc-next-label">${next?'→ '+next.rank+' · '+next.label:'Все уровни пройдены!'}</div>
+    // Phase card (known habits only)
+    const curPhase=getCurrentPhaseObj(e.totalSeconds,h.name);
+    if(curPhase){
+      const pTier=getPhaseTierStyle(curPhase.tier);
+      html+=`<div class="phase-card" onclick="openTokensPage()">
+        <div class="pc2-rank" style="color:${pTier.color}">${curPhase.rank}</div>
+        <div class="pc2-body">
+          <div class="pc2-tier" style="color:${pTier.color}">${pTier.name}</div>
+          <div class="pc2-name">${curPhase.name}</div>
+          <div class="pc2-desc">${curPhase.desc}</div>
         </div>
-        <div class="pc-arrow">›</div>
-      </div>
-      <div class="pc-bar-track"><div class="pc-bar-fill" style="width:${progress}%;background:${nextTier2.color}"></div></div>
-      <div class="pc-footer">
-        <span class="pc-pct">${Math.floor(progress)}%</span>
-        ${next?`<span class="pc-time">Осталось: ${formatTimeLeft(timeToNext)}</span>`:''}
-      </div>
-    </div>`;
+        <div class="pc2-arrow">›</div>
+      </div>`;
+    }
 
   } else {
     html+=`<div class="empty-state">
@@ -815,58 +889,53 @@ function render(){
     </div>`;
   }
 
-  // Tokens page
+  // Phases page
   {
     const th=data.habits.find(x=>x.id===activeHabitId);
     const tEl=th?getElapsed(th.quitDate):{totalSeconds:0};
-    const earnedMs=MILESTONES.filter(m=>tEl.totalSeconds>=m.sec);
-    const futureMs=MILESTONES.filter(m=>tEl.totalSeconds<m.sec);
-    const nextM=futureMs[0]||null;
-    const nextIdx=nextM?MILESTONES.indexOf(nextM):MILESTONES.length;
-    const nextTier=getTokenTier(nextIdx);
-    const nextPrev=nextIdx>0?MILESTONES[nextIdx-1]:null;
-    const nextProg=nextM?(nextPrev?Math.min(100,((tEl.totalSeconds-nextPrev.sec)/(nextM.sec-nextPrev.sec))*100):Math.min(100,(tEl.totalSeconds/nextM.sec)*100)):100;
-    const nextLeft=nextM?Math.max(0,nextM.sec-tEl.totalSeconds):0;
-    const habitColor=th?th.color:'#2aabee';
+    const phases=th?getHabitPhases(th.name):null;
+    const curPhase=th&&phases?getCurrentPhaseObj(tEl.totalSeconds,th.name):null;
     html+=`<div class="tokens-page ${activeModal==='tokensPage'?'open':''}" id="tokens-page">
       <div class="tp-topbar">
         <button class="tp-back" onclick="closeTokensPage()">←</button>
-        <div class="tp-title">Жетоны</div>
+        <div class="tp-title">${phases?'Фазы':'Прогресс'}</div>
       </div>
-      ${th?`<div class="tp-habit">${th.name} · ${tEl.days>0?tEl.days+' дн ':''} ${tEl.hours} ч без привычки</div>`:''}
-      ${nextM?`<div class="tp-next" style="background:${nextTier.bg};border:1px solid ${nextTier.glow}">
-        <div class="tp-next-tier-label" style="color:${nextTier.color}">${nextTier.name}</div>
-        <div class="tp-next-rank" style="color:${nextTier.color}">${nextM.rank}</div>
-        <div class="tp-next-label">${nextM.label}</div>
-        <div class="tp-next-bar-track"><div class="tp-next-bar-fill" style="width:${nextProg}%;background:${nextTier.color}"></div></div>
-        <div class="tp-next-meta"><span><strong>${Math.floor(nextProg)}%</strong> выполнено</span><span>Осталось: <strong>${formatTimeLeft(nextLeft)}</strong></span></div>
-      </div>`:`<div class="tp-no-next">🏆 Все жетоны получены!</div>`}
-      ${earnedMs.length>0?`<div class="tp-section">
-        <div class="tp-section-header">Получено · ${earnedMs.length}</div>
-        ${[...earnedMs].reverse().map(m=>{
-          const mIdx=MILESTONES.indexOf(m);
-          const tier=getTokenTier(mIdx);
-          const earnDate=th?new Date(new Date(th.quitDate).getTime()+m.sec*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):'';
-          return`<div class="tp-row">
-            <div class="tp-row-rank" style="color:${tier.color}">${m.rank}</div>
-            <div class="tp-row-info"><div class="tp-row-label">${m.label}</div><div class="tp-row-sub">${earnDate}</div></div>
-            <div class="tp-tier-badge" style="color:${tier.color};background:${tier.bg}">${tier.name}</div>
+      ${th?`<div class="tp-habit">${th.name} · ${tEl.days>0?tEl.days+' дн ':tEl.hours>0?tEl.hours+' ч ':''}без привычки</div>`:''}
+      ${phases?`<div class="pt-list">
+        ${phases.map((p,i)=>{
+          const isDone=tEl.totalSeconds>=p.endSec;
+          const isCurrent=p===curPhase;
+          const isFuture=!isDone&&!isCurrent;
+          const ts=getPhaseTierStyle(p.tier);
+          const isFirst=i===0;
+          const isLast=i===phases.length-1;
+          let nextHint='';
+          if(isCurrent&&!isLast){
+            const secsLeft=phases[i+1].startSec-tEl.totalSeconds;
+            nextHint=`<div class="pt-item-nexthint">Следующая фаза через ${formatTimeLeft(secsLeft)}</div>`;
+          }
+          return`<div class="pt-item ${isDone?'done':isCurrent?'current':'future'}">
+            <div class="pt-left">
+              ${!isFirst?'<div class="pt-vline"></div>':'<div class="pt-vline" style="min-height:6px"></div>'}
+              <div class="pt-dot ${isDone?'done':isCurrent?'active':'future'}" style="color:${ts.color};${isCurrent?'background:'+ts.color:''}"></div>
+              ${!isLast?'<div class="pt-vline"></div>':''}
+            </div>
+            <div class="pt-right">
+              <div class="pt-item-header">
+                <div class="pt-item-rank" style="color:${isFuture?'var(--text3)':ts.color}">${p.rank}</div>
+                <div class="pt-item-name">${p.name}</div>
+                <div class="pt-item-badge" style="color:${ts.color};background:${ts.bg}">${ts.name}</div>
+              </div>
+              ${isCurrent||isDone?`<div class="pt-item-desc">${p.desc}</div>`:''}
+              ${nextHint}
+            </div>
           </div>`;
         }).join('')}
-      </div>`:''}
-      ${futureMs.length>0?`<div class="tp-section">
-        <div class="tp-section-header">Впереди · ${futureMs.length}</div>
-        ${futureMs.slice(1).map(m=>{
-          const mIdx=MILESTONES.indexOf(m);
-          const tier=getTokenTier(mIdx);
-          const left=Math.max(0,m.sec-tEl.totalSeconds);
-          return`<div class="tp-row future">
-            <div class="tp-row-rank" style="color:${tier.color}">${m.rank}</div>
-            <div class="tp-row-info"><div class="tp-row-label">${m.label}</div><div class="tp-row-sub">через ${formatTimeLeft(left)}</div></div>
-            <div class="tp-tier-badge" style="color:${tier.color};background:${tier.bg}">${tier.name}</div>
-          </div>`;
-        }).join('')}
-      </div>`:''}
+      </div>`:`<div style="padding:48px 24px;text-align:center">
+        <div style="font-size:42px;margin-bottom:14px">🔥</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text2)">Каждый день — победа</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:8px;line-height:1.6">Для своей привычки нет<br>универсальных фаз.<br>Но каждый день без неё делает тебя сильнее.</div>
+      </div>`}
     </div>`;
   }
 
