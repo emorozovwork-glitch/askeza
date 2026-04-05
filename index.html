@@ -413,9 +413,9 @@ function getTopOldToken(oldTokens){
   return best;
 }
 
-// Craving — Smoking (горб отмены, пик ~102% в 14ч, плато 7%)
-function riskFromSeconds(s){const d=s/86400;return 7+73/Math.pow(1+d,0.55)+133*d*Math.exp(-1.2*d)}
-function speedFromSeconds(s){const d=s/86400;return -40.15/(86400*Math.pow(1+d,1.55))+133*(1-1.2*d)*Math.exp(-1.2*d)/86400}
+// Smoking relapse — s=0 → 100%, ~1% через 10 лет
+function riskFromSeconds(s){return 99/Math.pow(1+s/86400,0.50)+1}
+function speedFromSeconds(s){return -49.5/(86400*Math.pow(1+s/86400,1.50))}
 function getRiskDecimals(s){const spd=Math.abs(speedFromSeconds(s));const c=spd*0.1;if(c<=0)return 8;return Math.max(4,Math.ceil(-Math.log10(c))+1)}
 
 // Risk calculations — Alcohol (B=0.30)
@@ -554,7 +554,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.1</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
