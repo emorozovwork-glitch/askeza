@@ -1289,7 +1289,7 @@ function drawRiskChart(touchDay,progress,ts){
   const ctx=canvas.getContext('2d');ctx.scale(2,2);
   ctx.clearRect(0,0,W,H);
 
-  const pad={top:16,right:PR=16,bottom:26,left:PL=28};
+  const pad={top:16,right:16,bottom:26,left:28};
   const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
   const yMax=isSmoking(h.name)?110:100;
   function xPx(d){return pad.left+(d/xMax)*cw}
