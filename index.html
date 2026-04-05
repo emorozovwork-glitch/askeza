@@ -488,7 +488,7 @@ function getPhaseForHabit(value,name){
   if(isSmoking(name))return getSmokingPhase(value);
   return getRiskPhase(value,isAlcohol(name));
 }
-function getMetricLabel(name){return isSmoking(name)?'Тяга':'Шанс рецидива'}
+function getMetricLabel(name){return isSmoking(name)?'Зависимость':'Шанс рецидива'}
 function getChartMotive(risk,name){
   if(isSmoking(name)){
     if(risk>=90)return'Первые часы самые тяжёлые — это нормально';
@@ -542,7 +542,7 @@ let chartAnimRAF=null;
 let chartPulseRAF=null;
 let chartAnimStart=null;
 let chartActiveTouchDay=null;
-const CHART_ANIM_MS=900;
+const CHART_ANIM_MS=500;
 let addPageSelectedPreset=null; // preset index 0-2 or 'custom'
 let pickerState={};
 
@@ -554,7 +554,7 @@ function render(){
 
   // Top bar
   html+=`<div class="topbar">
-    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.1</span></h1>
+    <h1>askeza <span style="font-size:11px;font-weight:500;color:var(--text3);letter-spacing:0.5px;vertical-align:middle">v1.1.2</span></h1>
     <div class="topbar-right">
       ${h?`<button class="menu-btn" onclick="openHabitActions('${h.id}')" style="font-size:22px;letter-spacing:1px;padding-bottom:10px">···</button>`:''}
       <button class="menu-btn" onclick="toggleSideMenu()">☰</button>
@@ -1331,19 +1331,30 @@ function drawRiskChart(touchDay,progress,ts){
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
   ctx.strokeStyle=lineGrd;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
 
-  // Minimal Y labels (0, 50, 100)
+  // Thin grid lines + Y labels
   ctx.font='500 9px Inter,-apple-system,sans-serif';ctx.textAlign='right';
-  ctx.fillStyle='rgba(142,142,147,0.55)';
-  [0,50,100].forEach(y=>{if(y<=yMax)ctx.fillText(y+'%',pad.left-5,yPx(y)+3)});
+  [0,25,50,75,100].forEach(y=>{
+    if(y>yMax)return;
+    ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.moveTo(pad.left,yPx(y));ctx.lineTo(pad.left+cw,yPx(y));ctx.stroke();
+    ctx.fillStyle='rgba(142,142,147,0.5)';
+    ctx.fillText(y+'%',pad.left-5,yPx(y)+3);
+  });
 
-  // Minimal X labels
-  const xTicks=xMax<=30?[{d:7,l:'1н'},{d:30,l:'1м'}]
-    :xMax<=90?[{d:30,l:'1м'},{d:90,l:'3м'}]
+  // X labels + vertical grid
+  const xTicks=xMax<=30?[{d:7,l:'1н'},{d:14,l:'2н'},{d:30,l:'1м'}]
+    :xMax<=90?[{d:30,l:'1м'},{d:60,l:'2м'},{d:90,l:'3м'}]
     :xMax<=180?[{d:30,l:'1м'},{d:90,l:'3м'},{d:180,l:'6м'}]
-    :xMax<=365?[{d:30,l:'1м'},{d:90,l:'3м'},{d:365,l:'1г'}]
-    :[{d:365,l:'1г'},{d:730,l:'2г'},{d:1825,l:'5г'}];
-  ctx.textAlign='center';ctx.fillStyle='rgba(142,142,147,0.55)';
-  xTicks.forEach(t=>{if(t.d<=xMax)ctx.fillText(t.l,xPx(t.d),H-pad.bottom+12)});
+    :xMax<=365?[{d:30,l:'1м'},{d:90,l:'3м'},{d:180,l:'6м'},{d:365,l:'1г'}]
+    :[{d:365,l:'1г'},{d:730,l:'2г'},{d:1095,l:'3г'},{d:1825,l:'5г'}];
+  ctx.textAlign='center';
+  xTicks.forEach(t=>{
+    if(t.d>xMax)return;
+    ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.moveTo(xPx(t.d),pad.top);ctx.lineTo(xPx(t.d),pad.top+ch);ctx.stroke();
+    ctx.fillStyle='rgba(142,142,147,0.5)';
+    ctx.fillText(t.l,xPx(t.d),H-pad.bottom+12);
+  });
 
   // Ты здесь — pulsing dot (only after animation done)
   if(progress>=1&&currentDays<=xMax){
